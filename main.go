@@ -2,9 +2,12 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
-	"log"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 )
 
 //Quiz is a struct to hold questions and answers
@@ -15,13 +18,13 @@ type Quiz struct {
 
 
 //readFile read the csv file, and return in to the main
-func readFile(filename string) ([][]string, error) {
+func readFile(filename string) ([][]string) {
 	//Open opens the named file for reading. If successful, methods on
 	//the returned file can be used for reading
 	csvFile, err := os.Open(filename)
 
 	if err != nil {
-		return [][]string{}, err
+		exitProgram(fmt.Sprintf("Cannot read file %s", filename))
 	}
 
 	defer csvFile.Close()
@@ -30,7 +33,7 @@ func readFile(filename string) ([][]string, error) {
 	file := csv.NewReader(csvFile)
 
 	if _, err := file.Read(); err != nil {
-		return [][]string{}, err
+		exitProgram(err.Error())
 	}
 
 	//ReadAll() eads all the remaining records from the reader. 
@@ -38,10 +41,15 @@ func readFile(filename string) ([][]string, error) {
 	records, err := file.ReadAll()
 
 	if err != nil {
-		return [][]string{}, err
+		exitProgram(err.Error())
 	}
 
-	return records, nil
+	return records
+}
+
+func exitProgram(msg string) {
+	fmt.Println(msg)
+	os.Exit(1)
 }
 
 func main() {
@@ -49,22 +57,29 @@ func main() {
 	var quiz Quiz
 
 	//get the content file in readFile()
-	records, err := readFile("quiz_problems.csv")
+	records := readFile("quiz_problems.csv")
 
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	//assign all quiz_problems.csv to slice of quiz in variable allQuiz
 	for _, record := range records {
 		quiz.questions = record[0]
-		quiz.answer = record[1]
+		quiz.answer = strings.TrimSpace(record[1])
 
 		allQuiz = append(allQuiz, quiz)
 	}
 
+	//user input section and correctAnswer section
+	var input string
+	var correctAnswer = 0
+
 	for _, item := range allQuiz {
-		fmt.Printf("%s = %s\n", item.questions, item.answer)
+		fmt.Printf("%s = ", item.questions)
+		fmt.Scanf("%s\n", &input)
+
+		if input == item.answer {
+			correctAnswer++
+		}
 	}
 
+	fmt.Println("Correct answer = " + strconv.Itoa(correctAnswer))
 }
