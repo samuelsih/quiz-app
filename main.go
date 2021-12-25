@@ -65,17 +65,27 @@ func startQuiz(quiz []Quiz) {
 
 	var input string
 	var correctAnswer = 0
+	inputChannel := make(chan string)
 
+	//goroutine for input answer
+	//this anonymous goroutine prevent us from scanf bug with timer
+	go func ()  {
+		fmt.Scanf("%s\n", &input)
+		inputChannel <- input
+	}()
+
+	//for loop until time runs out
 	for _, item := range quiz {
+		fmt.Printf("%s = ", item.questions)
+
 		select {
+		//if timer expires, timer will sent to C
 		case <-timer.C:
-			fmt.Printf("Correct answer = %d", correctAnswer)
+			fmt.Printf("\nCorrect answer = %d", correctAnswer)
 			return
 		
-		default:
-			fmt.Printf("%s = ", item.questions)
-			fmt.Scanf("%s\n", &input)
-	
+		//if in goroutine user has input some answers, do this
+		case input := <- inputChannel:
 			if input == item.answer {
 				correctAnswer++
 			}
