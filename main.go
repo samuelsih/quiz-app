@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -47,10 +46,45 @@ func readFile(filename string) ([][]string) {
 	return records
 }
 
+//exitProgram exit this program when errors occured
 func exitProgram(msg string) {
 	fmt.Println(msg)
 	os.Exit(1)
 }
+
+//startQuiz start the program with user input
+func startQuiz(quiz []Quiz) {
+	//timerFlag is helper cli for timer
+	timerFlag := flag.Int("time", 30, "The timer for answering this questions")	
+
+	//flag.Parse() makes user can input the time in cli (-time={our_time})
+	flag.Parse()
+
+	//timer is the timer for this quiz
+	timer := time.NewTimer(time.Duration(*timerFlag) * time.Second)
+
+	var input string
+	var correctAnswer = 0
+
+	for _, item := range quiz {
+		select {
+		case <-timer.C:
+			fmt.Printf("Correct answer = %d", correctAnswer)
+			return
+		
+		default:
+			fmt.Printf("%s = ", item.questions)
+			fmt.Scanf("%s\n", &input)
+	
+			if input == item.answer {
+				correctAnswer++
+			}
+		}
+	}
+
+	
+}
+
 
 func main() {
 	var allQuiz []Quiz
@@ -68,18 +102,7 @@ func main() {
 		allQuiz = append(allQuiz, quiz)
 	}
 
+	startQuiz(allQuiz)
 	//user input section and correctAnswer section
-	var input string
-	var correctAnswer = 0
 
-	for _, item := range allQuiz {
-		fmt.Printf("%s = ", item.questions)
-		fmt.Scanf("%s\n", &input)
-
-		if input == item.answer {
-			correctAnswer++
-		}
-	}
-
-	fmt.Println("Correct answer = " + strconv.Itoa(correctAnswer))
 }
